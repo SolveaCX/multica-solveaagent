@@ -29,6 +29,7 @@ import {
   SquarePen,
   CircleUser,
   FolderKanban,
+  Sparkles,
   X,
   Zap,
 } from "lucide-react";
@@ -108,7 +109,8 @@ type NavKey =
   | "agents"
   | "runtimes"
   | "skills"
-  | "settings";
+  | "settings"
+  | "insights";
 
 // Static schema (key + icon) — labels resolved at render via useT("layout").
 type NavLabelKey =
@@ -120,7 +122,8 @@ type NavLabelKey =
   | "agents"
   | "runtimes"
   | "skills"
-  | "settings";
+  | "settings"
+  | "insights";
 
 const personalNav: { key: NavKey; labelKey: NavLabelKey; icon: typeof Inbox }[] = [
   { key: "inbox", labelKey: "inbox", icon: Inbox },
@@ -132,6 +135,7 @@ const workspaceNav: { key: NavKey; labelKey: NavLabelKey; icon: typeof Inbox }[]
   { key: "projects", labelKey: "projects", icon: FolderKanban },
   { key: "autopilots", labelKey: "autopilots", icon: Zap },
   { key: "agents", labelKey: "agents", icon: Bot },
+  { key: "insights", labelKey: "insights", icon: Sparkles },
 ];
 
 const configureNav: { key: NavKey; labelKey: NavLabelKey; icon: typeof Inbox }[] = [

@@ -52,6 +52,7 @@ import { collectThreadReplies } from "./thread-utils";
 import { AgentLiveCard } from "./agent-live-card";
 import { ExecutionLogSection } from "./execution-log-section";
 import { PullRequestList } from "./pull-request-list";
+import { GTMReviewPanel } from "./gtm-review-panel";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@multica/core/auth";
 import { useCurrentWorkspace, useWorkspacePaths } from "@multica/core/paths";
@@ -863,6 +864,7 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
 
   const sidebarContent = (
     <div className="space-y-5">
+      <GTMReviewPanel issue={issue} timeline={timeline} wsId={wsId} />
       {/* Properties */}
       <div>
         <button
