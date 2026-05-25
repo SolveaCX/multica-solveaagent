@@ -7,7 +7,8 @@ import { useT } from "../../i18n";
 
 const INSTALL_CMD =
   "curl -fsSL https://raw.githubusercontent.com/multica-ai/multica/main/scripts/install.sh | bash";
-const SETUP_CMD = "multica setup";
+const PRODUCTION_URL = "https://multica-ai.shulex.com";
+const SETUP_CMD = `multica setup self-host --server-url ${PRODUCTION_URL} --app-url ${PRODUCTION_URL}`;
 
 function CopyButton({ text }: { text: string }) {
   const { t } = useT("onboarding");
@@ -54,11 +55,9 @@ function Step({ n, label, cmd }: { n: number; label: string; cmd: string }) {
 
 /**
  * CLI install instructions — two copy-and-run commands. Hardcoded because
- * there's nothing environmental to infer: step 1 is the public install
- * script, step 2 is the cloud `multica setup` which the CLI itself knows
- * the endpoints for. Local development tests a self-host variant by
- * typing the extended command directly in the terminal; no need to
- * thread env vars through React.
+ * there is nothing environmental to infer: step 1 is the public install
+ * script, step 2 pins the production self-host endpoint used by this
+ * deployment so users can copy the command without remembering URLs.
  */
 export function CliInstallInstructions() {
   const { t } = useT("onboarding");
