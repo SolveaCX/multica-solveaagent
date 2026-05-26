@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	AuthCookieName   = "multica_auth"
-	CSRFCookieName   = "multica_csrf"
-	authCookieMaxAge = 30 * 24 * 60 * 60 // 30 days in seconds
+	AuthCookieName     = "multica_auth"
+	CSRFCookieName     = "multica_csrf"
+	authCookieMaxAge   = 30 * 24 * 60 * 60 // 30 days in seconds
+	shulexCookieDomain = ".shulex.com"
 )
 
 var ipCookieDomainWarnOnce sync.Once
@@ -30,7 +31,10 @@ var ipCookieDomainWarnOnce sync.Once
 func cookieDomain() string {
 	raw := strings.TrimSpace(os.Getenv("COOKIE_DOMAIN"))
 	if raw == "" {
-		return ""
+		return cookieDomainFromFrontendOrigin()
+	}
+	if isShulexHost(raw) {
+		return shulexCookieDomain
 	}
 	// A leading dot ("." for subdomain matching) is legal syntax but doesn't
 	// change whether the remainder is an IP literal.
@@ -44,6 +48,26 @@ func cookieDomain() string {
 		return ""
 	}
 	return raw
+}
+
+func cookieDomainFromFrontendOrigin() string {
+	raw := strings.TrimSpace(os.Getenv("FRONTEND_ORIGIN"))
+	if raw == "" {
+		return ""
+	}
+	u, err := url.Parse(raw)
+	if err != nil {
+		return ""
+	}
+	if isShulexHost(u.Hostname()) {
+		return shulexCookieDomain
+	}
+	return ""
+}
+
+func isShulexHost(host string) bool {
+	host = strings.ToLower(strings.TrimSpace(strings.TrimPrefix(host, ".")))
+	return host == "shulex.com" || strings.HasSuffix(host, ".shulex.com")
 }
 
 // isSecureCookie reports whether session cookies should carry the Secure flag.

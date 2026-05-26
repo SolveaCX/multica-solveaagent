@@ -24,17 +24,20 @@ function parseReviewComment(content: string): ParsedReview | null {
   if (!content.startsWith("## 🤖 AI Review")) return null;
   try {
     const scoreMatch = content.match(/— (\d+)\/100/);
-    const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
+    const score = Number(scoreMatch?.[1] ?? 0);
     const recMatch = content.match(/推荐: (✓ Approve|✗ Reject|✏ Revise)/);
     const recommendation = recMatch?.[1] ?? "";
     const summaryMatch = content.match(/\*\*总结:\*\* (.+)/);
     const summary = summaryMatch?.[1] ?? "";
     const checklistSection = content.match(/### Checklist\n([\s\S]*?)(?:\n###|$)/)?.[1] ?? "";
-    const checklist = checklistSection.trim().split("\n").filter(Boolean).map(line => ({
-      passed: line.startsWith("✓"),
-      text: line.replace(/^[✓⚠] /, "").split(" — ")[0],
-      note: line.includes(" — ") ? line.split(" — ")[1] : undefined,
-    }));
+    const checklist = checklistSection.trim().split("\n").filter(Boolean).map(line => {
+      const [text = "", note] = line.replace(/^[✓⚠] /, "").split(" — ");
+      return {
+        passed: line.startsWith("✓"),
+        text,
+        note,
+      };
+    });
     const annotationsSection = content.match(/### 内联批注\n([\s\S]*?)$/)?.[1] ?? "";
     const annotations: ParsedReview["annotations"] = [];
     for (const block of annotationsSection.split("\n\n").filter(b => b.includes("> "))) {

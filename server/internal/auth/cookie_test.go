@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -39,6 +40,8 @@ func TestCookieDomain(t *testing.T) {
 		{"whitespace only", "   ", ""},
 		{"real domain", ".example.com", ".example.com"},
 		{"bare domain", "example.com", "example.com"},
+		{"shulex subdomain normalized", "multica-ai.shulex.com", ".shulex.com"},
+		{"shulex bare domain normalized", "shulex.com", ".shulex.com"},
 		{"IPv4 rejected", "192.168.5.5", ""},
 		{"IPv4 with leading dot rejected", ".192.168.5.5", ""},
 		{"IPv6 rejected", "::1", ""},
@@ -98,4 +101,55 @@ func TestSetAuthCookies_HTTPSProduction(t *testing.T) {
 			t.Errorf("cookie %q Domain = %q, want %q", c.Name, c.Domain, "app.example.com")
 		}
 	}
+}
+
+func TestSetAuthCookies_ShulexSubdomainUsesSharedDomain(t *testing.T) {
+	t.Setenv("FRONTEND_ORIGIN", "https://multica-ai.shulex.com")
+	t.Setenv("COOKIE_DOMAIN", "")
+
+	rec := httptest.NewRecorder()
+	if err := SetAuthCookies(rec, "test-token"); err != nil {
+		t.Fatalf("SetAuthCookies: %v", err)
+	}
+
+	for _, c := range rec.Result().Cookies() {
+		if c.Domain != "shulex.com" {
+			t.Errorf("cookie %q parsed Domain = %q, want %q", c.Name, c.Domain, "shulex.com")
+		}
+	}
+	assertSetCookieDomain(t, rec, "shulex.com")
+}
+
+func TestClearAuthCookies_ShulexSubdomainUsesSharedDomain(t *testing.T) {
+	t.Setenv("FRONTEND_ORIGIN", "https://multica-ai.shulex.com")
+	t.Setenv("COOKIE_DOMAIN", "")
+
+	rec := httptest.NewRecorder()
+	ClearAuthCookies(rec)
+
+	for _, c := range rec.Result().Cookies() {
+		if c.Domain != "shulex.com" {
+			t.Errorf("cookie %q parsed Domain = %q, want %q", c.Name, c.Domain, "shulex.com")
+		}
+	}
+	assertSetCookieDomain(t, rec, "shulex.com")
+}
+
+func assertSetCookieDomain(t *testing.T, rec *httptest.ResponseRecorder, want string) {
+	t.Helper()
+
+	for _, header := range rec.Result().Header.Values("Set-Cookie") {
+		if !containsCookieAttribute(header, "Domain="+want) {
+			t.Errorf("Set-Cookie header %q missing Domain=%s", header, want)
+		}
+	}
+}
+
+func containsCookieAttribute(header, attr string) bool {
+	for _, part := range strings.Split(header, ";") {
+		if strings.TrimSpace(part) == attr {
+			return true
+		}
+	}
+	return false
 }
